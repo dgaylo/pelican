@@ -265,6 +265,8 @@ def slugify(value, regex_subs=(), preserve_case=False, use_unicode=False):
 def copy(source, destination, ignores=None):
     """Recursively copy source into destination.
 
+    Returns a list of files created
+
     If source is a file, destination has to be a file as well.
     The function is able to copy either files or directories.
 
@@ -285,7 +287,7 @@ def copy(source, destination, ignores=None):
 
     if any(fnmatch.fnmatch(os.path.basename(source), ignore) for ignore in ignores):
         logger.info("Not copying %s due to ignores", source_)
-        return
+        return []
 
     if os.path.isfile(source_):
         dst_dir = os.path.dirname(destination_)
@@ -294,6 +296,7 @@ def copy(source, destination, ignores=None):
             os.makedirs(dst_dir)
         logger.info("Copying %s to %s", source_, destination_)
         copy_file(source_, destination_)
+        return [os.path.normpath(destination_)]
 
     elif os.path.isdir(source_):
         if not os.path.exists(destination_):
@@ -303,8 +306,9 @@ def copy(source, destination, ignores=None):
             logger.warning(
                 "Cannot copy %s (a directory) to %s (a file)", source_, destination_
             )
-            return
+            return []
 
+        dest_list = []
         for src_dir, subdirs, others in os.walk(source_, followlinks=True):
             dst_dir = os.path.join(destination_, os.path.relpath(src_dir, source_))
 
@@ -326,12 +330,14 @@ def copy(source, destination, ignores=None):
                 if os.path.isfile(src_path):
                     logger.info("Copying %s to %s", src_path, dst_path)
                     copy_file(src_path, dst_path)
+                    dest_list.append(os.path.normpath(dst_path))
                 else:
                     logger.warning(
                         "Skipped copy %s (not a file or " "directory) to %s",
                         src_path,
                         dst_path,
                     )
+        return dest_list
 
 
 def copy_file(source, destination):

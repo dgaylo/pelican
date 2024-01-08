@@ -727,27 +727,33 @@ class TestCopy(unittest.TestCase):
         path = os.path.join(self.root_dir, *path)
         self.assertTrue(os.path.exists(path), "Directory does not exist: %s" % path)
 
+    def _list_contains(self, dest_list, *path):
+        path = os.path.join(self.root_dir, *path)
+        self.assertIn(path, dest_list, "Destination list does not contain %s" % path)
+
     def test_copy_file_same_path(self):
         self._create_file("a.txt")
-        utils.copy(
+        dest_list = utils.copy(
             os.path.join(self.root_dir, "a.txt"), os.path.join(self.root_dir, "b.txt")
         )
         self._exist_file("b.txt")
+        self.assertEqual(dest_list, [os.path.join(self.root_dir, "b.txt")])
 
     def test_copy_file_different_path(self):
         self._create_dir("a")
         self._create_dir("b")
         self._create_file("a", "a.txt")
-        utils.copy(
+        dest_list = utils.copy(
             os.path.join(self.root_dir, "a", "a.txt"),
             os.path.join(self.root_dir, "b", "b.txt"),
         )
         self._exist_dir("b")
         self._exist_file("b", "b.txt")
+        self._list_contains(dest_list, "b", "b.txt")
 
     def test_copy_file_create_dirs(self):
         self._create_file("a.txt")
-        utils.copy(
+        dest_list = utils.copy(
             os.path.join(self.root_dir, "a.txt"),
             os.path.join(self.root_dir, "b0", "b1", "b2", "b3", "b.txt"),
         )
@@ -756,30 +762,35 @@ class TestCopy(unittest.TestCase):
         self._exist_dir("b0", "b1", "b2")
         self._exist_dir("b0", "b1", "b2", "b3")
         self._exist_file("b0", "b1", "b2", "b3", "b.txt")
+        self._list_contains(dest_list, "b0", "b1", "b2", "b3", "b.txt")
 
     def test_copy_dir_same_path(self):
         self._create_dir("a")
         self._create_file("a", "a.txt")
-        utils.copy(os.path.join(self.root_dir, "a"), os.path.join(self.root_dir, "b"))
+        dest_list = utils.copy(
+            os.path.join(self.root_dir, "a"), os.path.join(self.root_dir, "b")
+        )
         self._exist_dir("b")
         self._exist_file("b", "a.txt")
+        self._list_contains(dest_list, "b", "a.txt")
 
     def test_copy_dir_different_path(self):
         self._create_dir("a0")
         self._create_dir("a0", "a1")
         self._create_file("a0", "a1", "a.txt")
         self._create_dir("b0")
-        utils.copy(
+        dest_list = utils.copy(
             os.path.join(self.root_dir, "a0", "a1"),
             os.path.join(self.root_dir, "b0", "b1"),
         )
         self._exist_dir("b0", "b1")
         self._exist_file("b0", "b1", "a.txt")
+        self._list_contains(dest_list, "b0", "b1", "a.txt")
 
     def test_copy_dir_create_dirs(self):
         self._create_dir("a")
         self._create_file("a", "a.txt")
-        utils.copy(
+        dest_list = utils.copy(
             os.path.join(self.root_dir, "a"),
             os.path.join(self.root_dir, "b0", "b1", "b2", "b3", "b"),
         )
@@ -789,6 +800,7 @@ class TestCopy(unittest.TestCase):
         self._exist_dir("b0", "b1", "b2", "b3")
         self._exist_dir("b0", "b1", "b2", "b3", "b")
         self._exist_file("b0", "b1", "b2", "b3", "b", "a.txt")
+        self._list_contains(dest_list, "b0", "b1", "b2", "b3", "b", "a.txt")
 
 
 class TestDateFormatter(unittest.TestCase):
